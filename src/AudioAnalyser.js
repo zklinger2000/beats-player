@@ -58,7 +58,6 @@ class AudioAnalyser extends Component {
 
     // Each time we play, create a new AudioBufferSourceNode
     this.source = this.audioContext.createBufferSource();
-    console.log(this.typeOf(this.source));
     // Connect source node to AudioBuffer from props
     this.source.buffer = this.state.audioBuffer;
     // Connect source node to analyzer
