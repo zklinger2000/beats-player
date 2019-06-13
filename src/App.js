@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import AudioAnalyser from './AudioAnalyser';
+import BeatsPlayer from './BeatsPlayer';
 import './App.css';
 
 
@@ -7,7 +7,7 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-        <AudioAnalyser/>
+        <BeatsPlayer/>
       </div>
     );
   }
