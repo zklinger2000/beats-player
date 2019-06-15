@@ -11,3 +11,9 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+canvas {
+  margin-top: 30px;
+  outline: 4px solid black;
+  outline-offset: -4px;
+}
