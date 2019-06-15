@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import assign from 'object-assign';
-import AudioVisualiser from './AudioVisualiser';
 
 class BeatsPlayer extends Component {
   constructor(props) {
@@ -16,8 +15,14 @@ class BeatsPlayer extends Component {
       trackTime: 0,
       audioBufferSourceNode: null,
       audioBuffer: null,
+      analyser: null,
       audioData: new Uint8Array(0)
     };
+    // Button refs
+    this.playButton = React.createRef();
+    this.pauseButton = React.createRef();
+    this.stopButton = React.createRef();
+    // Bind this to methods
     this.fetchAudioBuffer = this.fetchAudioBuffer.bind(this);
     this.tick = this.tick.bind(this);
     this.playAudio = this.playAudio.bind(this);
@@ -32,9 +37,11 @@ class BeatsPlayer extends Component {
     this.analyser.fftSize = 256
     // Prefilling the temp audioData array with the value 64 to get a straight
     // line for initial visualisation
-    this.dataArray = new Uint8Array(this.analyser.frequencyBinCount).fill(64);
+    this.dataArray = new Uint8Array(this.analyser.frequencyBinCount).fill(128);
+    this.pauseButton.current.setAttribute('disabled', 'disabled');
+    this.stopButton.current.setAttribute('disabled', 'disabled');
     // Fetch the mp3
-    this.fetchAudioBuffer('https://zklinger-photobucket.s3-us-west-2.amazonaws.com/portfolio/time_or_patience_roughmix.mp3');
+    this.fetchAudioBuffer('https://zklinger-photobucket.s3-us-west-2.amazonaws.com/portfolio/danger-storm-by-kevin-macleod.mp3');
     // Start the animation loop that updates the trackTime and audioData array during playback
     this.rafId = requestAnimationFrame(this.tick);
   }
@@ -78,9 +85,6 @@ class BeatsPlayer extends Component {
 
   playAudio() {
     let { startTime } = this.state;
-    const play = document.querySelector('#play');
-    const pause = document.querySelector('#pause');
-    const stop = document.querySelector('#stop');
 
     // Create a new AudioBufferSourceNode on each play
     let audioBufferSourceNode = this.audioContext.createBufferSource();
@@ -94,20 +98,19 @@ class BeatsPlayer extends Component {
     // Update state
     this.setState(assign({}, this.state, {
       audioBufferSourceNode,
+      analyser: this.analyser,
       isPlaying: true,
       isPaused: false,
       onTime: this.audioContext.currentTime
     }));
     // Update button states
-    play.setAttribute('disabled', 'disabled');
-    pause.removeAttribute('disabled');
-    stop.removeAttribute('disabled');
+    this.playButton.current.setAttribute('disabled', 'disabled');
+    this.pauseButton.current.removeAttribute('disabled');
+    this.stopButton.current.removeAttribute('disabled');
   }
 
   pauseAudio() {
     let { onTime, audioBufferSourceNode, startTime } = this.state;
-    const play = document.querySelector('#play');
-    const pause = document.querySelector('#pause');
 
     // Stop the audio track and update track variables
     audioBufferSourceNode.stop();
@@ -119,15 +122,12 @@ class BeatsPlayer extends Component {
       startTime: (startTime + (this.audioContext.currentTime - onTime))
     }));
     // Update button states
-    play.removeAttribute('disabled');
-    pause.setAttribute('disabled', 'disabled');
+    this.playButton.current.removeAttribute('disabled');
+    this.pauseButton.current.setAttribute('disabled', 'disabled');
   }
 
   stopAudio() {
     let { audioBufferSourceNode } = this.state;
-    const play = document.querySelector('#play');
-    const pause = document.querySelector('#pause');
-    const stop = document.querySelector('#stop');
 
     // Stop the audio track and update track variables
     audioBufferSourceNode.stop(0);
@@ -138,27 +138,39 @@ class BeatsPlayer extends Component {
       isPaused: false,
       startTime: 0,
       audioBufferSourceNode: null,
+      analyser: null,
       trackTime: 0
     }));
     // Update button states
-    play.removeAttribute('disabled');
-    pause.setAttribute('disabled', 'disabled');
-    stop.setAttribute('disabled', 'disabled');
+    this.playButton.current.removeAttribute('disabled');
+    this.pauseButton.current.setAttribute('disabled', 'disabled');
+    this.stopButton.current.setAttribute('disabled', 'disabled');
   }
 
   componentWillUnmount() {
     cancelAnimationFrame(this.rafId);
     this.analyser.disconnect();
-    this.state.audioBufferSourceNode.disconnect();
+    if (this.state.audioBufferSourceNode) {
+      this.state.audioBufferSourceNode.disconnect();
+    }
   }
 
   render() {
     return (
       <div id='beatsPlayer'>
-        <AudioVisualiser audioData={this.state.audioData} />
-        <button id="play" onClick={this.playAudio}>Play</button>
-        <button id="pause" onClick={this.pauseAudio}> || </button>
-        <button id="stop" onClick={this.stopAudio}>Stop</button>
+        { React.Children.map(this.props.children, child => {
+            return React.cloneElement(child, {
+              audioData: this.state.audioData,
+              audioBuffer: this.state.audioBuffer,
+              analyser: this.state.analyser,
+              trackTime: this.state.trackTime
+            });
+          }) }
+        <section className="controls">
+          <button ref={this.playButton} onClick={this.playAudio}>Play</button>
+          <button ref={this.pauseButton} onClick={this.pauseAudio}> || </button>
+          <button ref={this.stopButton} onClick={this.stopAudio}>Stop</button>
+        </section>
       </div>
     );
   }
