@@ -1,6 +1,6 @@
 # beats-player
 
-See a live [demo]('https://zklinger.com/beats-player')
+See a live [demo](https://zklinger.com/beats-player)
 
 # The Web Audio API and HTML Canvas
 
